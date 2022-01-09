@@ -1,0 +1,11 @@
+{
+    "author": [
+        "original filter authors",
+        "Joel B"
+    ],
+    "install_msg": "This is a modified fork of the filter plugin; it uses the same commands.",
+    "name": "filterfork",
+    "short": "A modified fork of the filter plugin.",
+    "description": "A modified fork of the filter plugin. Currently only change is adding a notification message in the original channel.",
+    "tags": []
+}
