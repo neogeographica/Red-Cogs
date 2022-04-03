@@ -28,10 +28,17 @@ class FilterFork(commands.Cog):
             "filter": [],
             "filterban_count": 0,
             "filterban_time": 0,
+            "filtermute_count": 0,
+            "filtermute_time": 0,
             "filter_names": False,
             "filter_default_name": "John Doe",
         }
-        default_member_settings = {"filter_count": 0, "next_reset_time": 0}
+        default_member_settings = {
+            "filterban_count": 0,
+            "filterban_next_reset_time": 0,
+            "filtermute_count": 0,
+            "filtermute_next_reset_time": 0,
+        }
         default_channel_settings = {"filter": []}
         self.config.register_guild(**default_guild_settings)
         self.config.register_member(**default_member_settings)
@@ -65,6 +72,12 @@ class FilterFork(commands.Cog):
                     "default_setting": False,
                     "image": "\N{FILE CABINET}\N{VARIATION SELECTOR-16} \N{HAMMER}",
                     "case_str": "Filter ban",
+                },
+                {
+                    "name": "filtermute",
+                    "default_setting": False,
+                    "image": "\N{FILE CABINET}\N{VARIATION SELECTOR-16} \N{MUTE}",
+                    "case_str": "Filter mute",
                 },
                 {
                     "name": "filterhit",
@@ -135,6 +148,41 @@ class FilterFork(commands.Cog):
             async with self.config.guild(ctx.guild).all() as guild_data:
                 guild_data["filterban_count"] = count
                 guild_data["filterban_time"] = timeframe
+            await ctx.send("Count and time have been set.")
+
+    @filterset.command(name="mute")
+    async def filter_mute(self, ctx: commands.Context, count: int, timeframe: int):
+        """Set the filter's automute conditions.
+
+        Users will be muted if they send `<count>` filtered words in
+        `<timeframe>` seconds.
+
+        Set both to zero to disable automute.
+
+        Examples:
+            - `[p]filterset mute 5 5` - Mute users who say 5 filtered words in 5 seconds.
+            - `[p]filterset mute 2 20` - Mute users who say 2 filtered words in 20 seconds.
+
+        **Arguments:**
+
+        - `<count>` The amount of filtered words required to trigger a mute.
+        - `<timeframe>` The period of time in which too many filtered words will trigger a mute.
+        """
+        if (count <= 0) != (timeframe <= 0):
+            await ctx.send(
+                "Count and timeframe either both need to be 0 "
+                "or both need to be greater than 0!"
+            )
+            return
+        elif count == 0 and timeframe == 0:
+            async with self.config.guild(ctx.guild).all() as guild_data:
+                guild_data["filtermute_count"] = 0
+                guild_data["filtermute_time"] = 0
+            await ctx.send("Automute disabled.")
+        else:
+            async with self.config.guild(ctx.guild).all() as guild_data:
+                guild_data["filtermute_count"] = count
+                guild_data["filtermute_time"] = timeframe
             await ctx.send("Count and time have been set.")
 
     @commands.group(name="filter")
@@ -427,20 +475,32 @@ class FilterFork(commands.Cog):
         author = message.author
         guild_data = await self.config.guild(guild).all()
         member_data = await self.config.member(author).all()
-        filter_count = guild_data["filterban_count"]
-        filter_time = guild_data["filterban_time"]
-        user_count = member_data["filter_count"]
-        next_reset_time = member_data["next_reset_time"]
+        filterban_count = guild_data["filterban_count"]
+        filterban_time = guild_data["filterban_time"]
+        filtermute_count = guild_data["filtermute_count"]
+        filtermute_time = guild_data["filtermute_time"]
+        user_filterban_count = member_data["filterban_count"]
+        user_filterban_next_reset_time = member_data["filterban_next_reset_time"]
+        user_filtermute_count = member_data["filtermute_count"]
+        user_filtermute_next_reset_time = member_data["filtermute_next_reset_time"]
         created_at = message.created_at.replace(tzinfo=timezone.utc)
 
-        if filter_count > 0 and filter_time > 0:
-            if created_at.timestamp() >= next_reset_time:
-                next_reset_time = created_at.timestamp() + filter_time
+        if filterban_count > 0 and filterban_time > 0:
+            if created_at.timestamp() >= user_filterban_next_reset_time:
+                user_filterban_next_reset_time = created_at.timestamp() + filterban_time
                 async with self.config.member(author).all() as member_data:
-                    member_data["next_reset_time"] = next_reset_time
-                    if user_count > 0:
-                        user_count = 0
-                        member_data["filter_count"] = user_count
+                    member_data["filterban_next_reset_time"] = user_filterban_next_reset_time
+                    if user_filterban_count > 0:
+                        user_filterban_count = 0
+                        member_data["filterban_count"] = user_filterban_count
+        if filtermute_count > 0 and filtermute_time > 0:
+            if created_at.timestamp() >= user_filtermute_next_reset_time:
+                user_filtermute_next_reset_time = created_at.timestamp() + filtermute_time
+                async with self.config.member(author).all() as member_data:
+                    member_data["filtermute_next_reset_time"] = user_filtermute_next_reset_time
+                    if user_filtermute_count > 0:
+                        user_filtermute_count = 0
+                        member_data["filtermute_count"] = user_filtermute_count
 
         hits = await self.filter_hits(message.content, message.channel)
 
@@ -475,10 +535,10 @@ class FilterFork(commands.Cog):
                 pass
             else:
                 self.bot.dispatch("filter_message_delete", message, hits)
-                if filter_count > 0 and filter_time > 0:
-                    user_count += 1
-                    await self.config.member(author).filter_count.set(user_count)
-                    if user_count >= filter_count and created_at.timestamp() < next_reset_time:
+                if filterban_count > 0 and filterban_time > 0:
+                    user_filterban_count += 1
+                    await self.config.member(author).filterban_count.set(user_filterban_count)
+                    if user_filterban_count >= filterban_count and created_at.timestamp() < user_filterban_next_reset_time:
                         reason = "Autoban (too many filtered messages.)"
                         try:
                             await guild.ban(author, reason=reason)
@@ -490,6 +550,28 @@ class FilterFork(commands.Cog):
                                 guild,
                                 message.created_at.replace(tzinfo=timezone.utc),
                                 "filterban",
+                                author,
+                                guild.me,
+                                reason,
+                            )
+                if filtermute_count > 0 and filtermute_time > 0 and type(author) is discord.Member:
+                    user_filtermute_count += 1
+                    await self.config.member(author).filtermute_count.set(user_filtermute_count)
+                    if user_filtermute_count >= filtermute_count and created_at.timestamp() < user_filtermute_next_reset_time:
+                        mutes_cog = ctx.bot.get_cog("Mutes")
+                        if mutes_cog is not None:
+                            reason = "Automute (too many filtered messages.)"
+                            reason_only_arg = {"reason": reason}
+                            await ctx.invoke(
+                                mutes_cog.mute,
+                                users=[author],
+                                time_and_reason=reason_only_arg,
+                            )
+                            await modlog.create_case(
+                                self.bot,
+                                guild,
+                                message.created_at.replace(tzinfo=timezone.utc),
+                                "filtermute",
                                 author,
                                 guild.me,
                                 reason,

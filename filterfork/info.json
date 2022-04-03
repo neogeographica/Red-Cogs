@@ -7,5 +7,8 @@
     "name": "filterfork",
     "short": "A modified fork of the filter plugin.",
     "description": "A modified fork of the filter plugin. Currently only change is adding a notification message in the original channel.",
+    "required_cogs": {
+        "mutes": "https://github.com/Cog-Creators/Red-DiscordBot"
+    },
     "tags": []
 }
