@@ -461,16 +461,23 @@ class FilterFork(commands.Cog):
             )
             try:
                 await message.delete()
-                notify_channel = message.channel
-                display_name_paren = ""
-                if author.name != author.display_name:
-                    display_name_paren = " ({name})".format(name=author.display_name)
-                notify_message = "message from {user}#{disc}{disp} was auto-deleted (word filter)".format(
-                    user=author.name,
-                    disc=author.discriminator,
-                    disp=display_name_paren,
-                )
-                await notify_channel.send(box(notify_message))
+                try:
+                    whisper = "FYI your message got auto-deleted by the server's word filter.\n"
+                    whisper += "Filtered words used: {words}".format(words=humanize_list(list(hits)))
+                    whisper += "Here's the original message text, to help if you want to edit and retry:\n"
+                    whisper += message.content
+                    await author.send(whisper)
+                except Exception:
+                    notify_channel = message.channel
+                    display_name_paren = ""
+                    if author.name != author.display_name:
+                        display_name_paren = " ({name})".format(name=author.display_name)
+                    notify_message = "message from {user}#{disc}{disp} was auto-deleted (word filter)".format(
+                        user=author.name,
+                        disc=author.discriminator,
+                        disp=display_name_paren,
+                    )
+                    await notify_channel.send(box(notify_message))
             except discord.HTTPException:
                 pass
             else:
