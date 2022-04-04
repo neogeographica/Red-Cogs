@@ -464,7 +464,7 @@ class FilterFork(commands.Cog):
                 try:
                     whisper = "FYI your message got auto-deleted by the server's word filter.\n"
                     whisper += "Filtered words used: {words}\n".format(words=humanize_list(list(hits)))
-                    whisper += "Here's the original message text, to help if you want to edit and retry:\n"
+                    whisper += "Here's the original message text, to help if you want to edit and retry:\n>>> "
                     whisper += message.content
                     await author.send(whisper)
                 except Exception:
