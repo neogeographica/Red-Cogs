@@ -445,6 +445,11 @@ class FilterFork(commands.Cog):
         hits = await self.filter_hits(message.content, message.channel)
 
         if hits:
+            hits_description=(
+                "Filtered words used: {words}".format(words=humanize_list(list(hits)))
+                if len(hits) > 1
+                else "Filtered word used: {word}".format(word=list(hits)[0])
+            )
             await modlog.create_case(
                 bot=self.bot,
                 guild=guild,
@@ -452,18 +457,14 @@ class FilterFork(commands.Cog):
                 action_type="filterhit",
                 user=author,
                 moderator=guild.me,
-                reason=(
-                    "Filtered words used: {words}".format(words=humanize_list(list(hits)))
-                    if len(hits) > 1
-                    else "Filtered word used: {word}".format(word=list(hits)[0])
-                ),
+                reason="\n"+hits_description+"\nOriginal message:\n"+message.content,
                 channel=message.channel,
             )
             try:
                 await message.delete()
                 try:
                     whisper = "FYI your message got auto-deleted by the server's word filter.\n"
-                    whisper += "Filtered words used: {words}\n".format(words=humanize_list(list(hits)))
+                    whisper += hits_description + "\n"
                     whisper += "Here's the original message text, to help if you want to edit and retry:\n>>> "
                     whisper += message.content
                     await author.send(whisper)
