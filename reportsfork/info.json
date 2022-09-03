@@ -1,0 +1,11 @@
+{
+    "author": [
+        "original filter authors",
+        "Joel B"
+    ],
+    "install_msg": "This is a modified fork of the reports plugin; it uses the same commands.",
+    "name": "reportsfork",
+    "short": "A modified fork of the reports plugin.",
+    "description": "A modified fork of the reports plugin. Currently only change is adding a mention of the staff role in the report.",
+    "tags": []
+}
