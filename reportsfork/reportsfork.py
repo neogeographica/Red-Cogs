@@ -218,7 +218,7 @@ class ReportsFork(commands.Cog):
             em = discord.Embed(description=report, colour=await ctx.embed_colour())
             em.set_author(
                 name=_("Report from {author}{maybe_nick}").format(
-                    staff_mention=staff_mention, author=author, maybe_nick=(f" ({author.nick})" if author.nick else "")
+                    author=author, maybe_nick=(f" ({author.nick})" if author.nick else "")
                 ),
                 icon_url=author.avatar_url,
             )
@@ -227,7 +227,7 @@ class ReportsFork(commands.Cog):
         else:
             em = None
             send_content = _("Report from {author.mention} (Ticket #{number})").format(
-                staff_mention=staff_mention, author=author, number=ticket_number
+                author=author, number=ticket_number
             )
             send_content += "\n" + report
 
