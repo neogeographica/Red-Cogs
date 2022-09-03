@@ -214,7 +214,7 @@ class ReportsFork(commands.Cog):
         if staff_role is None:
             staff_mention = ""
         else:
-            staff_mention = " to " + role.mention
+            staff_mention = " to " + staff_role.mention
 
         if await self.bot.embed_requested(channel, author):
             em = discord.Embed(description=report, colour=await ctx.embed_colour())
