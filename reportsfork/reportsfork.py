@@ -1,6 +1,6 @@
 import logging
 import asyncio
-from typing import Union, List, Literal
+from typing import Union, List, Literal, Optional
 from datetime import timedelta
 from copy import copy
 import contextlib
