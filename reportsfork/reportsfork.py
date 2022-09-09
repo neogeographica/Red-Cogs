@@ -206,7 +206,7 @@ class ReportsFork(commands.Cog):
         """
         Modified from Tunnel.message_forwarder to allow mentions.
         """
-        allowed_mentions=discord.AllowedMentions(roles=True),
+        allowed_mentions=discord.AllowedMentions(roles=True, everyone=False),
         rets = []
         if content:
             for page in pagify(content):
