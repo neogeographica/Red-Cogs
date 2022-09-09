@@ -206,17 +206,16 @@ class ReportsFork(commands.Cog):
         """
         Modified from Tunnel.message_forwarder to allow mentions.
         """
-        allowed_mentions=discord.AllowedMentions(roles=True, everyone=False),
         rets = []
         if content:
             for page in pagify(content):
-                rets.append(await destination.send(page, files=files, embed=embed, allowed_mentions=allowed_mentions))
+                rets.append(await destination.send(page, files=files, embed=embed, allowed_mentions=discord.AllowedMentions.all()))
                 if files:
                     del files
                 if embed:
                     del embed
         elif embed or files:
-            rets.append(await destination.send(files=files, embed=embed, allowed_mentions=allowed_mentions))
+            rets.append(await destination.send(files=files, embed=embed, allowed_mentions=discord.AllowedMentions.all()))
         return rets
 
     async def send_report(self, ctx: commands.Context, msg: discord.Message, guild: discord.Guild):
