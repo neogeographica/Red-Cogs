@@ -211,8 +211,6 @@ class ReportsFork(commands.Cog):
         await self.config.guild(guild).next_ticket.set(ticket_number + 1)
 
         staff_role = discord.utils.get(guild.roles, name=STAFF_ROLE_NAME)
-        if staff_role is not None:
-            report = _("{staff_role.mention}: ").format(staff_role=staff_role) + report
 
         if await self.bot.embed_requested(channel, author):
             em = discord.Embed(description=report, colour=await ctx.embed_colour())
@@ -223,12 +221,17 @@ class ReportsFork(commands.Cog):
                 icon_url=author.avatar_url,
             )
             em.set_footer(text=_("Report #{}").format(ticket_number))
-            send_content = None
+            if staff_role is None:
+                send_content = None
+            else:
+                send_content = _("{staff_role.mention}").format(staff_role=staff_role)
         else:
             em = None
             send_content = _("Report from {author.mention} (Ticket #{number})").format(
                 author=author, number=ticket_number
             )
+            if staff_role is not None:
+                send_content = _("{staff_role.mention}: ").format(staff_role=staff_role) + send_content
             send_content += "\n" + report
 
         try:
