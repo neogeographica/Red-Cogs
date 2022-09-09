@@ -195,6 +195,30 @@ class ReportsFork(commands.Cog):
         else:
             return guild
 
+    @staticmethod
+    async def message_forwarder(
+        *,
+        destination: discord.abc.Messageable,
+        content: str = None,
+        embed=None,
+        files: Optional[List[discord.File]] = None,
+    ) -> List[discord.Message]:
+        """
+        Modified from Tunnel.message_forwarder to allow mentions.
+        """
+        allowed_mentions=discord.AllowedMentions(roles=True),
+        rets = []
+        if content:
+            for page in pagify(content):
+                rets.append(await destination.send(page, files=files, embed=embed, allowed_mentions=allowed_mentions))
+                if files:
+                    del files
+                if embed:
+                    del embed
+        elif embed or files:
+            rets.append(await destination.send(files=files, embed=embed, allowed_mentions=allowed_mentions))
+        return rets
+
     async def send_report(self, ctx: commands.Context, msg: discord.Message, guild: discord.Guild):
 
         author = guild.get_member(msg.author.id)
@@ -235,7 +259,7 @@ class ReportsFork(commands.Cog):
             send_content += "\n" + report
 
         try:
-            await Tunnel.message_forwarder(
+            await self.message_forwarder(
                 destination=channel, content=send_content, embed=em, files=files
             )
         except (discord.Forbidden, discord.HTTPException):
